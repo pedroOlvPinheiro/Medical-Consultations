@@ -4,19 +4,23 @@ import { Consulta } from '../../../core/entities/consulta.entity';
 export class ConsultaInMemoryRepository implements ConsultaRepository {
   private consultas = new Map<string, Consulta>();
 
-  async findById(id: string): Promise<Consulta | null> {
-    return this.consultas.get(id) ?? null;
+  findById(id: string): Promise<Consulta | null> {
+    const consulta = this.consultas.get(id) ?? null;
+    return Promise.resolve(consulta);
   }
 
-  async findConsultasDoDia(date: Date): Promise<Consulta[]> {
+  findConsultasDoDia(date: Date): Promise<Consulta[]> {
     const targetDate = date.toDateString();
 
-    return Array.from(this.consultas.values()).filter(
+    const resultado = Array.from(this.consultas.values()).filter(
       (consulta) => consulta.horario.toDateString() === targetDate,
     );
+
+    return Promise.resolve(resultado);
   }
 
-  async save(consulta: Consulta): Promise<void> {
+  save(consulta: Consulta): Promise<void> {
     this.consultas.set(consulta.id, consulta);
+    return Promise.resolve();
   }
 }

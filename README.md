@@ -2,97 +2,131 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Sistema de Consultas Médicas - Arquitetura Hexagonal
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Este projeto foi desenvolvido como parte da disciplina de **Padrões de Software e Refatoração** (Sistemas de Informação - IFMA).
 
-## Description
+O objetivo é implementar um módulo de gestão de Prontuários Médicos utilizando **Arquitetura Hexagonal (Ports and Adapters)**, garantindo o desacoplamento entre as regras de negócio (Domínio) e tecnologias externas (Frameworks, Banco de Dados e APIs).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Sobre o Projeto (Etapa 01)
 
-## Project setup
+O sistema simula o ambiente de atendimento do **Dr. Vilegas**, permitindo:
+1.  **Registro de Prontuários:** O médico registra sintomas, diagnósticos e prescrições após uma consulta.
+2.  **Listagem de Prontuários:** Visualização do histórico médico.
+3.  **Notificações:** Envio simulado de SMS para o paciente ao finalizar o atendimento.
 
+### Estrutura Hexagonal Implementada
+* **Core (Domínio):** Entidades puras (`Consulta`, `Paciente`, `Prontuario`) sem dependências externas.
+* **Application (Portas & Casos de Uso):** Interfaces (`Repositories`, `NotificacaoService`) e Regras de Negócio (`UseCases`).
+* **Infra (Adaptadores):** Implementações concretas (`InMemoryRepository`, `ConsoleSmsAdapter`, `NestJS Controller`).
+
+---
+
+## 🛠️ Como Executar
+
+Instalar dependências:
 ```bash
 $ npm install
+
 ```
 
-## Compile and run the project
+Rodar o projeto (Os dados de teste são gerados automaticamente ao iniciar):
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
 $ npm run start:dev
 
-# production mode
-$ npm run start:prod
 ```
 
-## Run tests
+### 🧪 Testando a API (Exemplo)
 
-```bash
-# unit tests
-$ npm run test
+**Rota:** `POST http://localhost:3000/prontuarios`
+**Body (JSON):**
 
-# e2e tests
-$ npm run test:e2e
+```json
+{
+  "consultaId": "consulta-1",
+  "pesoKg": 75.0,
+  "alturaCm": 175,
+  "sintomas": "Febre e dor de cabeça",
+  "observacaoClinica": "Virose confirmada. Repouso."
+}
 
-# test coverage
-$ npm run test:cov
 ```
 
-## Deployment
+*Obs: O sistema exibirá no terminal o log do envio de SMS simulado.*
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📚 Etapa 02 - Evolução e Justificativas Arquiteturais
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+Abaixo descrevemos como o sistema evoluiria para atender novos requisitos, utilizando Padrões de Projeto e princípios SOLID.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### I. Atendimento Online (Pagamentos e Histórico)
 
-## Resources
+Para suportar pagamentos online (Pix, Cartão, Convênio) e visualização segura.
 
-Check out a few resources that may come in handy when working with NestJS:
+* **Padrões de Projeto:**
+* **Strategy:** Para alternar entre diferentes métodos de pagamento (`PagamentoPix`, `PagamentoCartao`) sem alterar a classe principal.
+* **Proxy:** Para controlar o acesso ao histórico do paciente, garantindo que apenas usuários autorizados carreguem dados sensíveis (Lazy Loading).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+* **Princípios SOLID:**
+* **OCP (Open/Closed Principle):** Novos métodos de pagamento podem ser adicionados criando novas classes "Strategy", sem modificar o código existente de processamento.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
+* **Justificativa Hexagonal:**
+* Os gateways de pagamento (Stripe, Pagar.me) seriam apenas **Adaptadores de Saída**. O Core desconhece a API externa, dependendo apenas de uma porta `IPagamentoService`.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
 
-## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### II. Notificações e Lembretes (Funcionalidade Implementada)
+
+*Funcionalidade de envio de SMS simulado já implementada neste projeto.*
+
+* **Padrões de Projeto:**
+* **Observer (Event-Driven):** O sistema pode disparar eventos (`ConsultaAgendada`, `ProntuarioRegistrado`) e ter múltiplos "observadores" (Email, SMS, Push) reagindo a isso.
+* **Adapter:** Utilizado na implementação atual (`ConsoleSmsAdapter`) para adaptar a interface de notificação para uma saída no console (ou API real futuramente).
+
+
+* **Princípios SOLID:**
+* **DIP (Dependency Inversion Principle):** O Caso de Uso depende da abstração `NotificacaoService` (Porta), e não da implementação concreta (Twilio/AWS).
+
+
+* **Justificativa Hexagonal:**
+* A lógica de "avisar o paciente" fica no Core. O "como avisar" (SMS, WhatsApp) é um detalhe de infraestrutura plugável via Adaptadores.
+
+
+
+### III. Compartilhamento e Integração
+
+Integração com sistemas externos de saúde e plataformas de terceiros.
+
+* **Padrões de Projeto:**
+* **Facade:** Para criar uma interface simplificada que mascara a complexidade de sistemas legados ou APIs de saúde complexas (HL7/FHIR).
+* **Anti-Corruption Layer (ACL):** Uma camada de tradução para impedir que modelos de dados externos "sujem" o Domínio da aplicação.
+
+
+* **Princípios SOLID:**
+* **ISP (Interface Segregation Principle):** Criar interfaces específicas para cada integração (`IGovernoIntegration`, `ILaboratorioIntegration`) em vez de uma interface genérica gigante.
+
+
+* **Justificativa Hexagonal:**
+* Sistemas externos são tratados estritamente como **Adaptadores**. A ACL garante que o Hexágono permaneça puro, traduzindo DTOs externos para Entidades de Domínio.
+
+
+
+### IV. Suporte a Múltiplas Clínicas (Multi-tenant)
+
+Escalabilidade para atender diversos médicos e clínicas isoladamente.
+
+* **Padrões de Projeto:**
+* **Abstract Factory:** Para criar famílias de objetos relacionados a uma clínica específica (ex: configurações de prontuário personalizadas por clínica).
+* **Decorator:** Para adicionar contexto de "Tenant" (Clínica ID) dinamicamente às requisições e repositórios sem alterar a lógica base.
+
+
+* **Princípios SOLID:**
+* **SRP (Single Responsibility Principle):** Separar a lógica de "quem é o cliente" (Tenant) da lógica de "o que o sistema faz" (Médica).
+
+
+* **Justificativa Hexagonal:**
+* O Domínio (Core) foca nas regras médicas, que são universais. A separação dos dados (qual banco acessar, qual schema usar) é resolvida nos **Adaptadores de Persistência**, mantendo a regra de negócio intacta e reutilizável.

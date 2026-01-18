@@ -4,11 +4,13 @@ import { Paciente } from '../../../core/entities/paciente.entity';
 export class PacienteInMemoryRepository implements PacienteRepository {
   private pacientes = new Map<string, Paciente>();
 
-  async findById(id: string): Promise<Paciente | null> {
-    return this.pacientes.get(id) ?? null;
+  findById(id: string): Promise<Paciente | null> {
+    const paciente = this.pacientes.get(id) ?? null;
+    return Promise.resolve(paciente);
   }
 
-  async save(paciente: Paciente): Promise<void> {
+  save(paciente: Paciente): Promise<void> {
     this.pacientes.set(paciente.id, paciente);
+    return Promise.resolve();
   }
 }
