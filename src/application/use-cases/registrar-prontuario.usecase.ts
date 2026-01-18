@@ -1,12 +1,10 @@
+import { Injectable, Inject } from '@nestjs/common';
 import { PacienteRepository } from '../ports/paciente-repository.port';
 import { ConsultaRepository } from '../ports/consulta-repository.port';
 import { ProntuarioRepository } from '../ports/prontuario-repository.port';
+import { NotificacaoService } from '../ports/notificacao-service.port';
 import { Prontuario } from '../../core/entities/prontuario.entity';
 
-/**
- * Input do Use Case
- * (não é DTO de API, é contrato interno)
- */
 export type RegistrarProntuarioInput = {
   consultaId: string;
   pesoKg?: number;
@@ -15,30 +13,30 @@ export type RegistrarProntuarioInput = {
   observacaoClinica?: string;
 };
 
-/**
- * Use Case: Registrar Prontuário
- */
+@Injectable()
 export class RegistrarProntuarioUseCase {
   constructor(
+    @Inject('ConsultaRepository')
     private readonly consultaRepository: ConsultaRepository,
+    @Inject('ProntuarioRepository')
     private readonly prontuarioRepository: ProntuarioRepository,
+    @Inject('PacienteRepository')
     private readonly pacienteRepository: PacienteRepository,
+    @Inject('NotificacaoService')
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(input: RegistrarProntuarioInput): Promise<Prontuario> {
-    // Buscar consulta
     const consulta = await this.consultaRepository.findById(input.consultaId);
 
     if (!consulta) {
       throw new Error('Consulta não encontrada');
     }
 
-    // Garantir que ainda não existe prontuário
     if (consulta.prontuarioId) {
       throw new Error('Esta consulta já possui um prontuário');
     }
 
-    // Criar prontuário
     const prontuario = new Prontuario(
       crypto.randomUUID(),
       consulta.id,
@@ -50,14 +48,11 @@ export class RegistrarProntuarioUseCase {
       input.observacaoClinica,
     );
 
-    // Persistir prontuário
     await this.prontuarioRepository.save(prontuario);
 
-    // Atualizar consulta
     consulta.marcarRealizada(prontuario.id);
     await this.consultaRepository.save(consulta);
 
-    // Atualizar histórico do paciente
     const paciente = await this.pacienteRepository.findById(
       consulta.pacienteId,
     );
@@ -68,9 +63,14 @@ export class RegistrarProntuarioUseCase {
       paciente.adicionarProntuario(prontuario.id);
 
       await this.pacienteRepository.save(paciente);
+
+      if (paciente.telefones.length > 0) {
+        const telefonePrincipal = paciente.telefones[0].toString();
+        const mensagem = `Olá ${paciente.nome}, seu atendimento foi finalizado. Prontuário ID: ${prontuario.id}`;
+        await this.notificacaoService.enviarSMS(telefonePrincipal, mensagem);
+      }
     }
 
-    // Retornar resultado
     return prontuario;
   }
 }
